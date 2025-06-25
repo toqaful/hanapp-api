@@ -25,6 +25,20 @@ class CertTemplateModel {
             return null;
         }
     }
+
+    async findOneByCertID(certID) {
+        try {
+            const pool = await poolPromise
+            const res = await pool
+            .request()
+            .input('certID', sql.VarChar(50), certID)
+            .query('SELECT * FROM [CertTemplate] WHERE [CertID] = @certID');
+
+            return res.recordset[0] || null;
+        } catch (error) {
+            return null;
+        }
+    }
 }
 
 module.exports = CertTemplateModel;

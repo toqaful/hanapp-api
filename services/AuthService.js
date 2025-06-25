@@ -22,6 +22,7 @@ class AuthService {
         payload.email = this.user_info.user.emails[0].value;
         payload.user_code = data.CODE;
         payload.user_role = data.role;
+        payload.is_uploader = data.is_uploader;
 
         const token = await jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
 
@@ -43,11 +44,12 @@ class AuthService {
             res.message = ''
             res.data = teacher_staff;
             res.data.role = 'user';
+            res.data.is_uploader = false;
 
             let uploader = await this.uploader_model.findByUploaderID(teacher_staff.CODE);
 
             if(uploader) {
-                res.data.role = uploader.isDisabled == 0 ? 'user_uploader' : 'user';
+                res.data.is_uploader = uploader.isDisabled == 0 ? true : false;
             }
 
             const buffer = Buffer.from(teacher_staff.Picture);

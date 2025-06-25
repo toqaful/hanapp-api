@@ -1,10 +1,12 @@
 const fs = require('fs');
+const CertificatesModel = require('../models/CertificatesModel');
 const CertTemplateModel = require('../models/CertTemplateModel');
 
 class CertTemplateService {
     
     constructor (user_info = null) {
         this.user_info = user_info;
+        this.certificates_model = new CertificatesModel();
         this.cert_template_model = new CertTemplateModel();
     }
 
@@ -15,7 +17,7 @@ class CertTemplateService {
 
         data.certID = this.user_info.body.certID;
         data.certPathName = this.user_info.file.filename;
-        data.uploadedByID = this.user_info.body.uploadedByID;
+        data.uploadedByID = this.user_info.user.user_code;
 
         let create_cert_template = await this.cert_template_model.create(data);
 
@@ -41,7 +43,7 @@ class CertTemplateService {
 
         let res = {};
 
-        if (!this.user_info.body || !this.user_info.body.certID || !this.user_info.body.uploadedByID || !this.user_info.file) {
+        if (!this.user_info.body || !this.user_info.body.certID || !this.user_info.file || (await this.validateCertID()).status == 'error') {
 
             this._removeOnUpload();
 
@@ -70,6 +72,38 @@ class CertTemplateService {
                 //file removed
             });
         }
+    }
+
+    async validateCertID() {
+
+        let res = {};
+
+        let certificate = await this.certificates_model.findOneByCertID(this.user_info.body.certID);
+        let exist_cert_template = await this.cert_template_model.findOneByCertID(this.user_info.body.certID);
+
+        if (!certificate) {
+
+            res.status = 'error';
+            res.message = ''
+            res.data = [];
+
+            return res;
+        }
+
+        if (exist_cert_template) {
+
+            res.status = 'error';
+            res.message = ''
+            res.data = [];
+
+            return res;
+        }
+
+        res.status = 'success';
+        res.message = ''
+        res.data = [];
+
+        return res;
     }
 }
 

@@ -13,7 +13,7 @@ module.exports = {
 
         let data = await auth_service.generateToken(validate_email.data);
 
-        res.redirect(`/oauth-success?token=${data.data}`);
+        return res.redirect(`/oauth-success?token=${data.data}`);
     },
 
     getUserInfo: async (req, res) => {

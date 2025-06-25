@@ -1,4 +1,3 @@
-const fs = require('fs');
 const TeacherStaffModel = require('../models/TeacherStaffModel');
 const UploaderModel = require('../models/UploaderModel');
 
@@ -73,6 +72,28 @@ class UploaderService {
         res.status = 'success';
         res.message = 'valid'
         res.data = [];
+
+        return res;
+    }
+
+    async getOneUploaderByID(uploaderID) {
+
+        let res = {};
+
+        let uploader = await this.uploader_model.findByUploaderID(uploaderID);
+
+        if (!uploader) {
+
+            res.status = 'error';
+            res.message = ''
+            res.data = [];
+
+            return res;
+        }
+
+        res.status = 'success';
+        res.message = ''
+        res.data = uploader;
 
         return res;
     }

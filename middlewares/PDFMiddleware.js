@@ -24,7 +24,7 @@ const fileFilter = (req, file, cb) => {
 const PDFMiddleware = multer({
     storage,
     fileFilter,
-    limits: { fileSize: 1 * 1024 * 1024 } // 5MB
+    limits: { fileSize: 1 * 1024 * 1024 }
 });
 
 module.exports = PDFMiddleware;
