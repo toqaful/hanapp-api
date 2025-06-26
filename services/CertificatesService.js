@@ -3,12 +3,14 @@ const path = require('path');
 const { PDFDocument, rgb } = require('pdf-lib')
 const fontkit = require('fontkit');
 const CertificatesModel = require('../models/CertificatesModel');
+const CertTemplateModel = require('../models/CertTemplateModel');
 
-class UploaderService {
+class CertificatesService {
     
     constructor (user_info = null) {
         this.user_info = user_info;
         this.certificates_model = new CertificatesModel();
+        this.cert_template_model = new CertTemplateModel();
     }
 
     async addCertificate() {
@@ -90,6 +92,7 @@ class UploaderService {
 
         try {
             const {
+                certID,
                 firstname = 'John',
                 lastname = 'Doe',
                 textCase = 'normal',
@@ -117,7 +120,9 @@ class UploaderService {
             const { r, g, b } = await this._hexToRgb(color);
 
             // Load assets
-            const pdfBytes = await fs.readFileSync(path.join(__dirname, '../uploads', 'pdf-1750824583961-27414185.pdf'));
+            const template = await this.cert_template_model.findOneByCertID(certID);
+
+            const pdfBytes = await fs.readFileSync(path.join(__dirname, '../uploads', template.CertPathName));
             const fontBytes = await this._loadFontBytes(weight);
             const pdfDoc = await PDFDocument.load(pdfBytes);
             pdfDoc.registerFontkit(fontkit);
@@ -156,6 +161,84 @@ class UploaderService {
             return res;
         }
     }
+
+    async generateCertificate() {
+
+        let res = {};
+
+        try {
+            const {
+                certID,
+                name,
+                textCase = 'normal',
+                y = 300,
+                fontSize = 36,
+                color = '#000000',
+                weight = 'regular'
+            } = this.user_info.query;
+
+            const template = await this.cert_template_model.findOneByCertID(certID);
+
+            const pdfBytes = await fs.readFileSync(path.join(__dirname, '../uploads', template.CertPathName));
+            const fontBytes = await this._loadFontBytes(weight);
+            const pdfDoc = await PDFDocument.create(); // new blank PDF
+            pdfDoc.registerFontkit(fontkit);
+            const customFont = await pdfDoc.embedFont(fontBytes);
+
+            const templatePdf = await PDFDocument.load(pdfBytes);
+            const [templatePage] = await templatePdf.copyPages(templatePdf, [0]);
+
+            const fontSizeNum = parseFloat(fontSize);
+            const yNum = parseFloat(y);
+            const { r, g, b } = await this._hexToRgb(color);
+
+            const names = JSON.parse(name);
+            
+            for (let i = 0; i < names.length; i++) {
+                const [copiedPage] = await pdfDoc.copyPages(templatePdf, [0]); // << move this inside loop!
+                const page = pdfDoc.addPage(copiedPage); // now this page belongs to pdfDoc
+            
+                let fullName = `${names[i].firstname || 'John'} ${names[i].lastname || 'Doe'}`;
+            
+                switch (textCase.toLowerCase()) {
+                    case 'upper':
+                        fullName = fullName.toUpperCase();
+                        break;
+                    case 'lower':
+                        fullName = fullName.toLowerCase();
+                        break;
+                }
+            
+                const pageWidth = page.getWidth();
+                const textWidth = customFont.widthOfTextAtSize(fullName, fontSizeNum);
+                const xCentered = (pageWidth - textWidth) / 2;
+            
+                page.drawText(fullName, {
+                    x: xCentered,
+                    y: yNum,
+                    size: fontSizeNum,
+                    font: customFont,
+                    color: rgb(r, g, b)
+                });
+            }
+            
+            const finalPdfBytes = await pdfDoc.save();
+
+            res.status = 'success';
+            res.message = ''
+            res.data = finalPdfBytes;
+
+            return res;
+
+        } catch (err) {
+
+            res.status = 'error';
+            res.message = 'something is wrong'
+            res.data = [];
+
+            return res;
+        }
+    }
 }
 
-module.exports = UploaderService
+module.exports = CertificatesService
