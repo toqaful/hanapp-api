@@ -1,5 +1,5 @@
 {
-  "name": "ecerthub",
+  "name": "hanap-api",
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
@@ -11,17 +11,16 @@
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "ejs": "^3.1.10",
     "express": "^5.1.0",
-    "fontkit": "^2.0.4",
+    "firebase-admin": "^13.4.0",
     "he": "^1.2.0",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
-    "mssql": "^11.0.1",
     "multer": "^2.0.1",
+    "mysql2": "^3.14.2",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
-    "pdf-lib": "^1.17.1",
-    "sanitize-html": "^2.17.0"
+    "sanitize-html": "^2.17.0",
+    "sequelize": "^6.37.7"
   }
 }
