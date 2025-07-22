@@ -26,6 +26,7 @@ class UserService {
             profilepicture: this.user_info.files['pic'][0].filename,
             govidpicture: this.user_info.files['gov'][0].filename,
             is_verified: true,
+            role_id: 1 // provider
         });
 
         res.status = 'success';
@@ -45,25 +46,29 @@ class UserService {
             this._removeOnUploadPictureProvider();
 
             res.status = 'error';
-            res.message = 'something is wrong'
+            res.message = 'some fields are required'
             res.data = [];
 
             return res;
         }
 
-        try {
-            // Verify Firebase ID token
-            const decoded = await admin.auth().verifyIdToken(this.user_info.body.idtoken);
-            const phone = decoded.phone_number;
-        } catch (error) {
-            // console.error("Error verifying token:", error);
-            // res.status(401).json({ success: false, error: "Invalid or expired OTP" });
-            res.status = 'error';
-            res.message = 'Invalid or expired OTP ' + error;
-            res.data = [];
+        // try {
+        //     // Verify Firebase ID token
+        //     const decoded = await admin.auth().verifyIdToken(this.user_info.body.idtoken);
+        //     const phone = decoded.phone_number;
+        // } catch (error) {
+        //     // console.error("Error verifying token:", error);
+        //     // res.status(401).json({ success: false, error: "Invalid or expired OTP" });
 
-            return res;
-        }
+        //     this._removeOnUploadGovProvider();
+        //     this._removeOnUploadPictureProvider();
+
+        //     res.status = 'error';
+        //     res.message = 'Invalid or expired OTP ' + error;
+        //     res.data = [];
+
+        //     return res;
+        // }
 
         res.status = 'success';
         res.message = 'valid'
@@ -96,6 +101,86 @@ class UserService {
                 //file removed
             });
         }
+    }
+
+    async createUserClient() {
+
+        let res = {};
+
+        let data = await User.create({
+            firstname: this.user_info.body.firstname,
+            middlename: this.user_info.body.middlename ? this.user_info.body.middlename : '',
+            lastname: this.user_info.body.lastname,
+            nickname: this.user_info.body.nickname ? this.user_info.body.nickname : '',
+            gender: this.user_info.body.gender,
+            datebirth: this.user_info.body.datebirth,
+            address: this.user_info.body.address,
+            phone: this.user_info.body.phone,
+            email: this.user_info.body.email,
+            profilepicture: this.user_info.files['pic'][0].filename,
+            is_verified: true,
+            role_id: 2 // client
+        });
+
+        res.status = 'success';
+        res.message = '';
+        res.data = data;
+
+        return res;
+    }
+
+    async validateFieldsClient() {
+
+        let res = {};
+
+        if (!this.user_info.body || !this.user_info.body.firstname || !this.user_info.body.lastname || !this.user_info.body.gender || !this.user_info.body.datebirth || !this.user_info.body.address || !this.user_info.body.phone || !this.user_info.body.email || !this.user_info.files || !this.user_info.files['pic'] || !this.user_info.body.idtoken) {
+
+            this._removeOnUploadPictureProvider(); // client
+
+            res.status = 'error';
+            res.message = 'some fields are required'
+            res.data = [];
+
+            return res;
+        }
+
+        // try {
+        //     // Verify Firebase ID token
+        //     const decoded = await admin.auth().verifyIdToken(this.user_info.body.idtoken);
+        //     const phone = decoded.phone_number;
+        // } catch (error) {
+        //     // console.error("Error verifying token:", error);
+        //     // res.status(401).json({ success: false, error: "Invalid or expired OTP" });
+
+        //     this._removeOnUploadPictureProvider(); // client
+
+        //     res.status = 'error';
+        //     res.message = 'Invalid or expired OTP ' + error;
+        //     res.data = [];
+
+        //     return res;
+        // }
+
+        res.status = 'success';
+        res.message = 'valid'
+        res.data = [];
+
+        return res;
+    }
+
+    async uploadClientError(err) {
+
+        if (err.code !== 'LIMIT_FILE_SIZE') {
+            this._removeOnUploadPictureProvider();
+        }
+
+        let res = {
+            status: 'error',
+            message: err.code === 'LIMIT_FILE_SIZE' ? 'File too large.' : err.message,
+            data: []
+        }
+
+        return res;
     }
 
     // async validateEmail() {
